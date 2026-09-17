@@ -1,0 +1,1 @@
+//Get the overlap: find overlap of the 2d projections of boxes, find the range of height at overlapping regions and multiply
