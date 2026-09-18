@@ -13,6 +13,12 @@ struct Box3D {
     float yaw;
 };
 
+struct BoxPair {
+    int pair_id;
+    Box3D first;
+    Box3D second;
+};
+
 float normalize_yaw(float yaw);
 
 }
