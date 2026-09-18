@@ -1,4 +1,8 @@
-struct Box3D{
+#pragma once
+
+namespace bev {
+
+struct Box3D {
     int pair_id;
     float x;
     float y;
@@ -10,3 +14,5 @@ struct Box3D{
 };
 
 float normalize_yaw(float yaw);
+
+}

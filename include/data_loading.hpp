@@ -1,9 +1,11 @@
+#pragma once
+
 #include "geometry.hpp"
 #include <string>
-#include <fstream>
-//Reads the box pair input files -> outputs the box3d
 
-Box3D obtain_box_data(std::string filepath);
+namespace bev {
 
-//Loads it into a Box3D type
+// Reads the box pair input file -> outputs the Box3D
+Box3D obtain_box_data(const std::string& filepath);
 
+}

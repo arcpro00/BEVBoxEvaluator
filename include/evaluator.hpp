@@ -1,6 +1,16 @@
-//Get the overlap: find overlap of the 2d projections of boxes, find the range of height at overlapping regions and multiply
+#pragma once
+
 #include "geometry.hpp"
-float get_area_overlap(Box3D box1, Box3D box2);
-float get_height_overlap(Box3D box1, Box3D box2);
-float get_overlap_volume(Box3D box1, Box3D box2);
-float get_individual_volume(Box3D box);
+#include "metrics.hpp"
+
+namespace bev {
+
+// Get the overlap: find overlap of the 2d projections of boxes, find the range of height at overlapping regions and multiply
+float get_area_overlap(const Box3D& box1, const Box3D& box2);
+float get_height_overlap(const Box3D& box1, const Box3D& box2);
+float get_overlap_volume(const Box3D& box1, const Box3D& box2);
+float get_individual_volume(const Box3D& box);
+
+MetricsResult get_pair_metrics(const Box3D& box1, const Box3D& box2);
+
+}

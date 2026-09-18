@@ -11,7 +11,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 # Define the library containing the component scripts
 add_library(box_eval_comp
     src/geometry.cpp
-    src/data_reader.cpp
+    src/data_loading.cpp
     src/evaluator.cpp
 )
 target_include_directories(box_eval_comp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
