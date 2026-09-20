@@ -1,6 +1,5 @@
 #include "geometry.hpp"
 #include <cmath>
-#include <numbers>
 
 namespace bev {
 
