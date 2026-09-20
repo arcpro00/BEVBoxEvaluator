@@ -6,10 +6,10 @@
 
 namespace bev {
 
-// Reads a single Box3D from the box pair input file
-Box3D obtain_box_data(const std::string& filepath);
+// Reads one row of input and outputs a Box3D
+Box3D parse_box(const std::string& line);
 
-// Reads all box rows from a modified KITTI-style file into individual boxes
-std::vector<Box3D> load_boxes(const std::string& filepath);
+// Reads all box rows from a modified KITTI-style file into individual pairs
+std::vector<BoxPair> load_box_pairs(const std::string& filepath);
 
 }

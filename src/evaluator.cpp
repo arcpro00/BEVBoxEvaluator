@@ -1,4 +1,5 @@
 #include "evaluator.hpp"
+#include "metrics.hpp"
 #include <array>
 #include <iostream>
 #include <vector>
