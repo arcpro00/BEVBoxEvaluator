@@ -1,6 +1,7 @@
 #include "evaluator.hpp"
 #include <array>
 #include <iostream>
+#include <vector>
 
 namespace bev {
 
@@ -8,51 +9,111 @@ std::array<float,4> get_box_borders(const Box3D& box){
     // Format: Left, Right, Bottom, Top
     std::array<float, 4> borders;
     borders[0] = box.x;
-    borders[1] = box.x + box.w;
+    borders[1] = box.x + box.l;
     borders[2] = box.y;
-    borders[3] = box.y + box.h;
+    borders[3] = box.y + box.w;
     return borders;
+}
+
+using Point = std::array<float, 2>;
+
+// Helper for getting box corners
+std::array<Point, 4> get_rotated_corners(const Box3D& box) {
+    // Corners without rotation in counterclockwise rotation
+    std::array<Point, 4> corners = {{
+        {-box.l/2, -box.w/2},
+        { box.l/2, -box.w/2},
+        { box.l/2,  box.w/2},
+        {-box.l/2,  box.w/2}
+    }};
+    float yaw = normalize_yaw(box.yaw);
+    float cos_yaw = std::cos(yaw);
+    float sin_yaw = std::sin(yaw);
+    // Rotation mapped corner coordinates
+    for (int i = 0; i < 4; i++) {
+        float dx = corners[i][0];
+        float dy = corners[i][1];
+        corners[i][0] = box.x + dx*cos_yaw - dy*sin_yaw;
+        corners[i][1] = box.y + dx*sin_yaw + dy*cos_yaw;
+    }
+    return corners;
+}
+
+// Helper for checking which side of an edge a point lies for counterclockwise ordered edges
+bool is_inside(const Point& p, const Point& a, const Point& b) {
+    float cross = (b[0] - a[0])*(p[1] - a[1]) - (b[1] - a[1])*(p[0] - a[0]);
+    if (cross >= 0.0f){
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
+//Helper for finding where edges intersect
+Point get_intersection(const Point& p, const Point& q, const Point& a, const Point& b) {
+    float cross_p = (b[0] - a[0])*(p[1] - a[1]) - (b[1] - a[1])*(p[0] - a[0]);
+    float cross_q = (b[0] - a[0])*(q[1] - a[1]) - (b[1] - a[1])*(q[0] - a[0]);
+    float t = cross_p / (cross_p - cross_q);
+    Point intersection;
+    intersection[0] = p[0] + t*(q[0] - p[0]);
+    intersection[1] = p[1] + t*(q[1] - p[1]);
+    return intersection;
 }
 
 float get_area_overlap(const Box3D& box1, const Box3D& box2) {
     // overlap area of the two BEV projections
-    std::array<float,4> borders1 = get_box_borders(box1);
-    std::array<float,4> borders2 = get_box_borders(box2);
-    if (borders1[1] < borders2[0] || borders1[0] > borders2[1]){
+    // Get corners in a counterclockwise ordered rotation for each box
+    std::array<Point, 4> corners1 = get_rotated_corners(box1);
+    std::array<Point, 4> corners2 = get_rotated_corners(box2);
+    // Clip corners to get corners of the overlapping polygon
+        // For each edge of box 2
+    std::vector<Point> polygon = {
+    corners1[0],
+    corners1[1],
+    corners1[2],
+    corners1[3]
+    };
+    for(int i = 0; i < 4; i++){
+        Point a = corners2[i];
+        Point b = corners2[(i + 1) % 4];
+        std::vector<Point> clipped;
+        // For each edge of the current polygon
+        for (std::size_t j = 0; j < polygon.size(); j++){
+            // Check if box 1 edge is inside of box 2 edge and handle appropriately
+            Point p1 = polygon[j];
+            Point p2 = polygon[(j+1)%polygon.size()];
+            bool inside1 = is_inside(p1,a,b);
+            bool inside2 = is_inside(p2,a,b);
+            if (inside1 && inside2){
+                clipped.push_back(p2);
+            }
+            else if (inside1 && !inside2){
+                clipped.push_back(get_intersection(p1, p2, a, b));
+            }
+            else if (!inside1 && inside2){
+                clipped.push_back(get_intersection(p1, p2, a, b));
+                clipped.push_back(p2);
+            }
+        }
+        polygon = clipped;
+            if (polygon.empty()){
+            break;
+        }
+    }
+
+    // Area of polygon sorted in counterclockwise order is then obtained using the shoelace algorithm
+    if (polygon.size() < 3){
         return 0.0f;
     }
-    if (borders1[3] < borders2[2] || borders1[2] > borders2[3]){
-        return 0.0f;
+    float dot1 = 0.0f;
+    float dot2 = 0.0f;
+    for (std::size_t i = 0; i < polygon.size(); i++){
+        std::size_t next = (i + 1) % polygon.size();
+        dot1 += polygon[i][0]*polygon[next][1];
+        dot2 += polygon[i][1]*polygon[next][0];
     }
-    //otherwise calculate bounds and compute a area 
-    float l; float r; float b; float t;
-    if (borders1[0] <= borders2[0]){
-        l = borders2[0];
-    }
-    else{
-        l = borders1[0];
-    }
-    if (borders1[2] <= borders2[2]){
-        b = borders2[2];
-    }
-    else{
-        b = borders1[2];
-    }
-    if (borders1[1] >= borders2[1]){
-        r = borders2[1];
-    }
-    else{
-        r = borders1[1];
-    }
-    if (borders1[3] >= borders2[3]){
-        t = borders2[3];
-    }
-    else{
-        t = borders1[3];
-    }
-    float area;
-    area = (r-l)*(t-b);
-    return area;
+    return std::abs(dot1 - dot2)/2.0f;
 }
 
 float get_height_overlap(const Box3D& box1, const Box3D& box2) {
