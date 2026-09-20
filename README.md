@@ -150,23 +150,23 @@ The intersection polygon of the two rectangles is calculated using the Sutherlan
 
 The overlap along the Z-axis is:
 
-\[
+$$
 h_{\text{overlap}} = \max(0, \min(z_1+h_1,z_2+h_2)-\max(z_1,z_2))
-\]
+$$
 
 ### 3D Intersection-over-Union
 
 The intersection volume is:
 
-\[
+$$
 V_{\text{intersection}} = A_{\text{overlap}} \times h_{\text{overlap}}
-\]
+$$
 
 The 3D IoU is:
 
-\[
+$$
 \text{IoU}_{3D} = \frac{V_{\text{intersection}}}{V_1+V_2-V_{\text{intersection}}}
-\]
+$$
 
 The resulting IoU ranges from 0 (no overlap) to 1 (identical boxes).
 
